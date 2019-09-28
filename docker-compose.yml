@@ -1,14 +1,31 @@
-version: '2'
+version: '3'
 services:
-  web:
-    build:
-      context: .
-      dockerfile: src/main/docker/Dockerfile
-    ports:
-      - "8080:8080"
+  app:
+    container_name: v-app
+    restart: always
+    build: .
+    working_dir: /app
     volumes:
-      - .:/code
+      - ./:/app
+      - ~/.m2:/root/.m2
+    expose:
+      - "8080"
     depends_on:
+      - nginx
       - redisserver
+    command: mvn clean spring-boot:run -Dspring-boot.run.profiles=docker
   redisserver:
+    restart: always
+    container_name: v-redis
     image: "redis:alpine"
+    ports:
+      - 6379:6379
+  nginx:
+    container_name: v-nginx
+    image: nginx:1.13
+    restart: always
+    ports:
+      - 8081:80
+      - 443:443
+    volumes:
+      - ./nginx:/etc/nginx/conf.d
